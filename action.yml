@@ -37,6 +37,10 @@ inputs:
   repoName:
     description: "Define the repo name so that it is included in the output JSON."
     required: false
+  deleteMissing:
+    default: "false"
+    description: "Delete references to feature flags that are no longer found in the codebase."
+    required: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -50,3 +54,4 @@ runs:
     GB_DEBUG: ${{ inputs.debug }}
     GB_LOOKBACK: ${{ inputs.lookback }}
     GB_REPO_NAME: ${{ inputs.repoName }}
+    GB_DELETE_MISSING: ${{ inputs.deleteMissing }}
