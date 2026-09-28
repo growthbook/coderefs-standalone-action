@@ -40,7 +40,7 @@ inputs:
 runs:
   using: 'docker'
   # Prebuilt and digest-pinned: ARC runners in containerMode: kubernetes cannot build container actions.
-  image: 'docker://ghcr.io/growthbook/gb-find-code-refs@sha256:REPLACE_WITH_PUBLISHED_DIGEST'
+  image: 'docker://ghcr.io/growthbook/gb-find-code-refs@sha256:599966136a7e963a88f392f2cb739643a78188e9657396199d9a8c1214e84d3e'
   entrypoint: 'gb-find-code-refs'
   env:
     GB_FLAGS_PATH: ${{ inputs.flagsPath }}
