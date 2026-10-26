@@ -2,6 +2,8 @@
 
 This GitHub Action is a utility that can be used for finding references to feature flags in your code, both for reference and for code cleanup.
 
+It runs the `gb-find-code-refs` binary directly (no container), so it works on self-hosted runners that cannot start containers, such as ARC in `containerMode: kubernetes`. Linux and macOS runners on x64 or ARM64 are supported; the runner needs `git`, `curl` and access to `github.com` release downloads.
+
 ## Configuration
 
 Create a new Actions workflow in your selected GitHub repository (e.g. `code-references.yml`) in the `.github/workflows` directory of your repository. Under "Edit new file", paste the following code:

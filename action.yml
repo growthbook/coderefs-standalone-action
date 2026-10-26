@@ -38,17 +38,33 @@ inputs:
     description: "Define the repo name so that it is included in the output JSON."
     required: false
 runs:
-  using: 'docker'
-  # Prebuilt and digest-pinned: ARC runners in containerMode: kubernetes cannot build container actions.
-  image: 'docker://ghcr.io/growthbook/gb-find-code-refs@sha256:599966136a7e963a88f392f2cb739643a78188e9657396199d9a8c1214e84d3e'
-  entrypoint: 'gb-find-code-refs'
-  env:
-    GB_FLAGS_PATH: ${{ inputs.flagsPath }}
-    GB_DIR: ${{ inputs.dir }}
-    GB_BRANCH: ${{ inputs.branch }}
-    GB_OUT_FILE: ${{ inputs.outFile }}
-    GB_CONTEXT_LINES: ${{ inputs.contextLines }}
-    GB_ALLOW_TAGS: ${{ inputs.allowTags }}
-    GB_DEBUG: ${{ inputs.debug }}
-    GB_LOOKBACK: ${{ inputs.lookback }}
-    GB_REPO_NAME: ${{ inputs.repoName }}
+  using: 'composite'
+  steps:
+    # Runs the bare binary rather than a container so it works where pods can't be spawned (ARC in containerMode: kubernetes).
+    - name: Find code references
+      shell: bash
+      env:
+        VERSION: '2.11.5-7'
+        GB_FLAGS_PATH: ${{ inputs.flagsPath }}
+        GB_DIR: ${{ inputs.dir }}
+        GB_BRANCH: ${{ inputs.branch }}
+        GB_OUT_FILE: ${{ inputs.outFile }}
+        GB_CONTEXT_LINES: ${{ inputs.contextLines }}
+        GB_ALLOW_TAGS: ${{ inputs.allowTags }}
+        GB_DEBUG: ${{ inputs.debug }}
+        GB_LOOKBACK: ${{ inputs.lookback }}
+        GB_REPO_NAME: ${{ inputs.repoName }}
+      run: |
+        # Checksums are pinned here, so a replaced release asset fails verification.
+        case "$RUNNER_OS/$RUNNER_ARCH" in
+          Linux/X64)   target=linux_amd64  sum=REPLACE_WITH_PUBLISHED_CHECKSUM ;;
+          Linux/ARM64) target=linux_arm64  sum=REPLACE_WITH_PUBLISHED_CHECKSUM ;;
+          macOS/X64)   target=darwin_amd64 sum=REPLACE_WITH_PUBLISHED_CHECKSUM ;;
+          macOS/ARM64) target=darwin_arm64 sum=REPLACE_WITH_PUBLISHED_CHECKSUM ;;
+          *) echo "::error::Unsupported runner: $RUNNER_OS/$RUNNER_ARCH"; exit 1 ;;
+        esac
+        archive="$RUNNER_TEMP/gb-find-code-refs.tar.gz"
+        curl -fsSL -o "$archive" "https://github.com/growthbook/gb-find-code-refs/releases/download/$VERSION/gb-find-code-refs_${VERSION}_${target}.tar.gz"
+        echo "$sum  $archive" | $(command -v sha256sum || echo shasum -a 256) -c -
+        tar -xzf "$archive" -C "$RUNNER_TEMP"
+        "$RUNNER_TEMP/gb-find-code-refs"
